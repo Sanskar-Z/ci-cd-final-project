@@ -1,0 +1,35 @@
+# Starter Tekton Task definitions.
+# Apply/adapt these in your course OpenShift cluster according to the lab.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: remove-workspace-files
+      image: alpine:3.20
+      script: |
+        #!/bin/sh
+        set -eu
+        find "$(workspaces.source.path)" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: nose
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: run-unit-tests
+      image: python:3.11-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        pip install --no-cache-dir -r requirements.txt
+        pip install --no-cache-dir nose
+        nosetests -v
